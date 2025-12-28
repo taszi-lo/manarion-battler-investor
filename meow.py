@@ -44,6 +44,7 @@ class Battler():
         self.spell_tome_price = (self.marketdata['Sell'].get('13',math.inf)+self.marketdata['Sell'].get('14',math.inf)+self.marketdata['Sell'].get('15',math.inf))/3
         self.shard_price= (self.marketdata['Buy'].get('2',0)+self.marketdata['Sell'].get('2',math.inf))/2
         self.mana_tome_price = (self.marketdata['Buy'].get('16',0)+self.marketdata['Sell'].get('16',math.inf))/2
+        self.herbprice = (self.marketdata['Buy'].get('40',0)+self.marketdata['Buy'].get('41',0)+self.marketdata['Sell'].get('40',math.inf)+self.marketdata['Sell'].get('41',math.inf))/4
         
     def _extracting_values(self):
         """Extracts values for different playerboosts."""
@@ -55,6 +56,12 @@ class Battler():
         self.cur_health = self.data['BaseBoosts'].get('45',0)
         self.cur_mana = self.data['BaseBoosts'].get('48',0)
         self.shield_rank = self.data['BaseBoosts'].get('24',0)
+        self.n = self.data['TotalBoosts'].get('130',0)+100
+        self.m = self.data['TotalBoosts'].get('131',0)+100
+        self.k = self.data['TotalBoosts'].get('132',0)+100
+        self.n1 = self.data['TotalBoosts'].get('130',0)
+        self.m1 = self.data['TotalBoosts'].get('131',0)
+        self.k1 = self.data['TotalBoosts'].get('132',0)
 
     def _computing_values(self):
         """Computes values from extracted data."""
@@ -78,7 +85,7 @@ class Battler():
 
     def dust_collector(self):
         """Dust collector roi."""
-        cost_of_next_DC = 7500000*(self.dc+1)**3+3*10000*(self.dc+1)**3*self.res_price
+        cost_of_next_DC = (7500000*(self.dc+1)**3+3*10000*(self.dc+1)**3*self.res_price)
         income_increase_from_dc = self.dust_income*0.002
         roi_dc =cost_of_next_DC/income_increase_from_dc
         return roi_dc
@@ -152,6 +159,7 @@ class Battler():
         ehp_inc_from_ten_pc_health = ((ehp_with_ten_pc_health/(self.mana_shield+self.health_points))-1)*100
         roi_health = ((10/ehp_inc_from_ten_pc_health)*self.cost_of_ten_percent_health)/self.extra_income
         return roi_health
+    
 # Mana shard
     def mana(self):
         """Mana shard roi."""
@@ -159,6 +167,7 @@ class Battler():
         ehp_inc_from_ten_pc_mana =((ehp_with_ten_pc_mana/(self.mana_shield+self.health_points))-1)*100
         roi_mana_shard = ((10/ehp_inc_from_ten_pc_mana)*self.cost_of_ten_percent_mana)/self.extra_income
         return roi_mana_shard
+    
 # Mana shield
     def mana_shield_tome(self):
         """Mana shield tome roi."""
@@ -166,11 +175,38 @@ class Battler():
         ehp_inc_from_ten_pc_mana =((ehp_with_ten_pc_mana/(self.mana_shield+self.health_points))-1)*100
         roi_mana_shield = ((10/ehp_inc_from_ten_pc_mana)*self.cost_of_ten_pc_shield)/self.extra_income
         return roi_mana_shield
+    
+    def farm(self):
+        """Farm roi."""
+        current_farm_prod = (self.n1/100+1)**0.9*(self.m1/100+1)**0.9*(self.k1/100+1)**0.9*2.5
+        net_farm_income = current_farm_prod*self.herbprice-current_farm_prod*150000
+        farm_prod_with_plus_hundred = ((self.n)/100+1)**0.9*((self.m)/100+1)**0.9*((self.k)/100+1)**0.9*2.5
+        net_farm_income_hundred = farm_prod_with_plus_hundred*self.herbprice-farm_prod_with_plus_hundred*150000
+        cost_of_plus_hundred_farm = ((self.n*(self.n+1)*(2*self.n+1))/6
+                                     +(self.m*(self.m+1)*(2*self.m+1))/6
+                                     +(self.k*(self.k+1)*(2*self.k+1))/6
+                                     -(self.n1*(self.n1+1)*(2*self.n1+1))/6
+                                     -(self.m1*(self.m1+1)*(2*self.m1+1))/6
+                                     -(self.k1*(self.k1+1)*(2*self.k1+1))/6
+                                     )*self.res_price
+        extra_income_from_hundred_farm = net_farm_income_hundred-net_farm_income
+        roi_farm = cost_of_plus_hundred_farm/(extra_income_from_hundred_farm*24)
+        return roi_farm
+    
 # Visualization
     def efficiency(self):
         """Making x,y lists for the visualizer."""
-        efficiency_list = [("Dust collector",1/self.dust_collector()*100),("Spellpower", 1/self.spellpower()*100),("Tome spell",1/self.spell_tome()*100),("Shards",1/self.shard()*100),("Ward shard",1/self.ward_shard()*100),
-                    ("Ward",1/self.ward()*100),("Resistance",1/self.resistance()*100),("Health",1/self.health()*100),("Mana shard",1/self.mana()*100),("Mana shield",1/self.mana_shield_tome()*100)]
+        efficiency_list = [("Dust collector",1/self.dust_collector()*100),
+                           ("Spellpower", 1/self.spellpower()*100),
+                           ("Tome spell",1/self.spell_tome()*100),
+                           ("Shards",1/self.shard()*100),
+                           ("Ward shard",1/self.ward_shard()*100),
+                           ("Ward",1/self.ward()*100),
+                           ("Resistance",1/self.resistance()*100),
+                           ("Health",1/self.health()*100),
+                           ("Mana shard",1/self.mana()*100),
+                           ("Mana shield",1/self.mana_shield_tome()*100),
+                           ("Farm",1/self.farm()*100)]
         sorted_efficiency_list = sorted(efficiency_list,key=lambda item: item[1])
         self.upgrade_name, self.efficiency_value = zip(*sorted_efficiency_list)
 
@@ -189,6 +225,7 @@ class Battler():
             "Health": "blue",
             "Mana shard": "blue",
             "Mana shield": "blue",
+            "Farm": "green",
         }
         fig =px.scatter(x=self.efficiency_value, y=self.upgrade_name, title=f"Daily return of different upgrades of {self.name}", labels=labels, size=self.efficiency_value, color=self.upgrade_name, color_discrete_map=colour_map)
         fig.show()
