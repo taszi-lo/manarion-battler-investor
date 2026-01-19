@@ -43,7 +43,7 @@ class Battler():
         self.res_price = (self.marketdata['Sell'].get('7',math.inf)+self.marketdata['Sell'].get('8',math.inf)+self.marketdata['Sell'].get('9',math.inf))/3
         self.spell_tome_price = (self.marketdata['Sell'].get('13',math.inf)+self.marketdata['Sell'].get('14',math.inf)+self.marketdata['Sell'].get('15',math.inf))/3
         self.shard_price= (self.marketdata['Buy'].get('2',0)+self.marketdata['Sell'].get('2',math.inf))/2
-        self.mana_tome_price = (self.marketdata['Buy'].get('16',0)+self.marketdata['Sell'].get('16',math.inf))/2
+        self.mana_tome_price = self.marketdata['Sell'].get('16',math.inf)
         self.herbprice = (self.marketdata['Buy'].get('40',0)+self.marketdata['Buy'].get('41',0)+self.marketdata['Sell'].get('40',math.inf)+self.marketdata['Sell'].get('41',math.inf))/4
         
     def _extracting_values(self):
@@ -179,9 +179,9 @@ class Battler():
     def farm(self):
         """Farm roi."""
         current_farm_prod = (self.n1/100+1)**0.9*(self.m1/100+1)**0.9*(self.k1/100+1)**0.9*2.5
-        net_farm_income = current_farm_prod*self.herbprice-current_farm_prod*150000
+        net_farm_income = current_farm_prod*self.herbprice-current_farm_prod*75000
         farm_prod_with_plus_hundred = ((self.n)/100+1)**0.9*((self.m)/100+1)**0.9*((self.k)/100+1)**0.9*2.5
-        net_farm_income_hundred = farm_prod_with_plus_hundred*self.herbprice-farm_prod_with_plus_hundred*150000
+        net_farm_income_hundred = farm_prod_with_plus_hundred*self.herbprice-farm_prod_with_plus_hundred*75000
         cost_of_plus_hundred_farm = ((self.n*(self.n+1)*(2*self.n+1))/6
                                      +(self.m*(self.m+1)*(2*self.m+1))/6
                                      +(self.k*(self.k+1)*(2*self.k+1))/6
@@ -227,5 +227,11 @@ class Battler():
             "Mana shield": "blue",
             "Farm": "green",
         }
-        fig =px.scatter(x=self.efficiency_value, y=self.upgrade_name, title=f"Daily return of different upgrades of {self.name}", labels=labels, size=self.efficiency_value, color=self.upgrade_name, color_discrete_map=colour_map)
+        fig =px.scatter(x=self.efficiency_value,
+                        y=self.upgrade_name,
+                        title=f"Daily return of different upgrades of {self.name}",
+                        labels=labels,
+                        size=self.efficiency_value,
+                        color=self.upgrade_name,
+                        color_discrete_map=colour_map)
         fig.show()
