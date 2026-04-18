@@ -85,11 +85,16 @@ class Battler():
 
     def dust_collector(self):
         """Dust collector roi."""
-        cost_of_next_DC = (7500000*(self.dc+1)**3+3*10000*(self.dc+1)**3*self.res_price)
+        cost_of_next_DC = (7500000*(self.dc+1)**3+3*10000*(self.dc+1)**3*self.res_price)*2
         income_increase_from_dc = self.dust_income*0.002
         roi_dc =cost_of_next_DC/income_increase_from_dc
         return roi_dc
     
+    def hedge_fund(self):
+        """Hedge fund roi."""
+        hedge_fund_roi = 1000/24
+        return hedge_fund_roi
+
 # 10% Damage increase with sp, tome, shardboost
 # Spellpower
     def spellpower(self):
@@ -196,7 +201,7 @@ class Battler():
 # Visualization
     def efficiency(self):
         """Making x,y lists for the visualizer."""
-        efficiency_list = [("Dust collector",1/self.dust_collector()*100),
+        efficiency_list = [("Dust collector x2",1/self.dust_collector()*100),
                            ("Spellpower", 1/self.spellpower()*100),
                            ("Tome spell",1/self.spell_tome()*100),
                            ("Shards",1/self.shard()*100),
@@ -206,7 +211,8 @@ class Battler():
                            ("Health",1/self.health()*100),
                            ("Mana shard",1/self.mana()*100),
                            ("Mana shield",1/self.mana_shield_tome()*100),
-                           ("Farm",1/self.farm()*100)]
+                           ("Farm",1/self.farm()*100),
+                           ("Hedge Fund", 1/self.hedge_fund()*100)]
         sorted_efficiency_list = sorted(efficiency_list,key=lambda item: item[1])
         self.upgrade_name, self.efficiency_value = zip(*sorted_efficiency_list)
 
@@ -215,7 +221,7 @@ class Battler():
         self.efficiency()
         labels = {'x':'Percent', 'y':''}
         colour_map = {
-            "Dust collector": "purple",
+            "Dust collector x2": "purple",
             "Spellpower": "red",
             "Tome spell": "red",
             "Shards": "red",
@@ -226,6 +232,7 @@ class Battler():
             "Mana shard": "blue",
             "Mana shield": "blue",
             "Farm": "green",
+            "Hedge Fund": "green",
         }
         fig =px.scatter(x=self.efficiency_value,
                         y=self.upgrade_name,
@@ -235,3 +242,4 @@ class Battler():
                         color=self.upgrade_name,
                         color_discrete_map=colour_map)
         fig.show()
+        
