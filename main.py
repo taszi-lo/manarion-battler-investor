@@ -4,7 +4,7 @@ if __name__ == "__main__":
 
     name = "meow" # Put your name in quotation marks here.
     tax = 25 # Put your dust tax % here.
-    mob_shift = 325 # Leave it 300 unless you know what you're doing.
+    mob_shift = 350 # Leave it 300 unless you know what you're doing.
 
     battler = Battler(
         name = name,

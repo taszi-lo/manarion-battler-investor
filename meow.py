@@ -2,7 +2,7 @@ import requests
 import math
 import plotly.express as px
 
-class Battler():
+class Battler:
     """A battler character in manarion"""
     def __init__(self, name, tax, mob_shift):
         """Initializing name, tax, data from market, api."""
@@ -80,7 +80,7 @@ class Battler():
         self.health_points = self.data['TotalBoosts'].get('4',1)*self.data['TotalBoosts'].get('45',1)*(self.data.get('Level')+9)
         self.cost_of_ten_percent_health = ((self.cur_health*1.1)*(self.cur_health*1.1+1)-(self.cur_health*(self.cur_health+1)))*self.shard_price
         self.cost_of_ten_percent_mana = ((self.cur_mana*1.1)*(self.cur_mana*1.1+1)-(self.cur_mana*(self.cur_mana+1)))*self.shard_price
-        self.cost_of_ten_pc_shield = (round(self.shield_rank*1.1)*((round(self.shield_rank*1.1)+1))/2-((self.shield_rank*(self.shield_rank+1))/2))*self.mana_tome_price
+        self.cost_of_ten_pc_shield = (round(self.shield_rank*1.1)*(round(self.shield_rank*1.1)+1)/2-((self.shield_rank*(self.shield_rank+1))/2))*self.mana_tome_price
 
 
     def dust_collector(self):
@@ -180,13 +180,14 @@ class Battler():
         ehp_inc_from_ten_pc_mana =((ehp_with_ten_pc_mana/(self.mana_shield+self.health_points))-1)*100
         roi_mana_shield = ((10/ehp_inc_from_ten_pc_mana)*self.cost_of_ten_pc_shield)/self.extra_income
         return roi_mana_shield
-    
+# Farm
     def farm(self):
         """Farm roi."""
+        upkeep = 50000
         current_farm_prod = (self.n1/100+1)**0.9*(self.m1/100+1)**0.9*(self.k1/100+1)**0.9*2.5
-        net_farm_income = current_farm_prod*self.herbprice-current_farm_prod*75000
+        net_farm_income = current_farm_prod*self.herbprice-current_farm_prod*upkeep
         farm_prod_with_plus_hundred = ((self.n)/100+1)**0.9*((self.m)/100+1)**0.9*((self.k)/100+1)**0.9*2.5
-        net_farm_income_hundred = farm_prod_with_plus_hundred*self.herbprice-farm_prod_with_plus_hundred*75000
+        net_farm_income_hundred = farm_prod_with_plus_hundred*self.herbprice-farm_prod_with_plus_hundred*upkeep
         cost_of_plus_hundred_farm = ((self.n*(self.n+1)*(2*self.n+1))/6
                                      +(self.m*(self.m+1)*(2*self.m+1))/6
                                      +(self.k*(self.k+1)*(2*self.k+1))/6
@@ -212,7 +213,8 @@ class Battler():
                            ("Mana shard",1/self.mana()*100),
                            ("Mana shield",1/self.mana_shield_tome()*100),
                            ("Farm",1/self.farm()*100),
-                           ("Hedge Fund", 1/self.hedge_fund()*100)]
+                           ("Hedge Fund", 1/self.hedge_fund()*100),
+                           ]
         sorted_efficiency_list = sorted(efficiency_list,key=lambda item: item[1])
         self.upgrade_name, self.efficiency_value = zip(*sorted_efficiency_list)
 
@@ -241,5 +243,5 @@ class Battler():
                         size=self.efficiency_value,
                         color=self.upgrade_name,
                         color_discrete_map=colour_map)
-        fig.show()
+        fig.show(renderer="browser")
         
