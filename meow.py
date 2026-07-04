@@ -10,6 +10,7 @@ class Battler:
         self.tax = tax
         self.mob_shift = mob_shift
         self._data()
+        self._guild_list()
         self._market_data()
         self._market_prices()
         self._extracting_values()
@@ -25,7 +26,20 @@ class Battler:
         else:
             print(f"Failed to fetch player data: {r.status_code}")
             return None    
-    
+        
+    def _guild_list(self):
+        "Make an api call, to get the list of guilds."
+        url= "https://api.manarion.com/guilds"
+        r = requests.get(url)
+
+        if r.status_code == 200:
+            self.guildlist = r.json()
+            print("Guild list aquired.")
+        else:
+            self.guildlist = []
+            print(f"Guild list couldn't be fetched: {r.status_code}")
+            return None
+        
     def _market_data(self):
         """ Make an api call, and store the response."""
         url= "https://api.manarion.com/market"
@@ -62,6 +76,14 @@ class Battler:
         self.n1 = self.data['TotalBoosts'].get('130',0)
         self.m1 = self.data['TotalBoosts'].get('131',0)
         self.k1 = self.data['TotalBoosts'].get('132',0)
+        self.drop_boost = self.data['TotalBoosts'].get('102',0)/100 + 1
+        self.fire_tome_drop_bonus = self.data['TotalBoosts'].get('25',0)
+        self.water_tome_drop_bonus = self.data['TotalBoosts'].get('26',0)
+        self.nature_tome_drop_bonus = self.data['TotalBoosts'].get('27',0)
+        self.guild_ID = self.data.get('GuildID',None)
+        self.guild_level = next(
+            (guild.get("Level", 0) for guild in self.guildlist if guild['ID'] == self.guild_ID),0
+        )
 
     def _computing_values(self):
         """Computes values from extracted data."""
@@ -81,7 +103,7 @@ class Battler:
         self.cost_of_ten_percent_health = ((self.cur_health*1.1)*(self.cur_health*1.1+1)-(self.cur_health*(self.cur_health+1)))*self.shard_price
         self.cost_of_ten_percent_mana = ((self.cur_mana*1.1)*(self.cur_mana*1.1+1)-(self.cur_mana*(self.cur_mana+1)))*self.shard_price
         self.cost_of_ten_pc_shield = (round(self.shield_rank*1.1)*(round(self.shield_rank*1.1)+1)/2-((self.shield_rank*(self.shield_rank+1))/2))*self.mana_tome_price
-
+        self.guild_level_drop_multiplier = 100*math.log(1+0.006*self.guild_level,2)/100+1
 
     def dust_collector(self):
         """Dust collector roi."""
@@ -199,6 +221,16 @@ class Battler:
         roi_farm = cost_of_plus_hundred_farm/(extra_income_from_hundred_farm*24)
         return roi_farm
     
+# Tome drop boost
+    def tome_drop_boost(self):
+        "Tome drop boost roi."
+        keys = ['25','26','27']
+        current_tome_drop_boost = max(self.data['BaseBoosts'].get(k, 0)for k in keys)
+        cost_of_next_drop_boost = 1000*(current_tome_drop_boost+1)**3*(999+(current_tome_drop_boost+1))*self.res_price
+        income_increase_of_one_boost = 28800/200*self.drop_boost*self.guild_level_drop_multiplier*self.spell_tome_price
+        roi_tome_drop_boost = cost_of_next_drop_boost/income_increase_of_one_boost
+        return roi_tome_drop_boost
+    
 # Visualization
     def efficiency(self):
         """Making x,y lists for the visualizer."""
@@ -214,6 +246,7 @@ class Battler:
                            ("Mana shield",1/self.mana_shield_tome()*100),
                            ("Farm",1/self.farm()*100),
                            ("Hedge Fund", 1/self.hedge_fund()*100),
+                           ("Tome drop boost", 1/self.tome_drop_boost()*100),
                            ]
         sorted_efficiency_list = sorted(efficiency_list,key=lambda item: item[1])
         self.upgrade_name, self.efficiency_value = zip(*sorted_efficiency_list)
@@ -235,6 +268,7 @@ class Battler:
             "Mana shield": "blue",
             "Farm": "green",
             "Hedge Fund": "green",
+            "Tome drop boost": "grey"
         }
         fig =px.scatter(x=self.efficiency_value,
                         y=self.upgrade_name,
